@@ -1,13 +1,25 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { instance } from "../config/BaseUrl";
+import {
+  MDBContainer,
+  MDBRow,
+  MDBCol,
+  MDBCard,
+  MDBCardBody,
+  MDBCardImage,
+} from "mdb-react-ui-kit";
+import SignupForm from "../components/SignupForm";
+import Navbar from "../components/Navbar";
 
 function Signup() {
   const [userDetails, setUserDetails] = useState({
     userName: "",
+    userEmail: "",
     password: "",
+    repeatPassword: "",
   });
-  const [err, setErorr] = useState();
+  const [err, setErr] = useState();
   const navigate = useNavigate();
   const changeFunction = ({ currentTarget: input }) => {
     setUserDetails({
@@ -16,48 +28,60 @@ function Signup() {
     });
   };
   const signupFunction = async () => {
+    if (
+      !userDetails.userName.trim() ||
+      !userDetails.userEmail.trim() ||
+      !userDetails.password.trim() ||
+      !userDetails.repeatPassword.trim()
+    ) {
+      setErr("Please fill all field");
+      return;
+    } else {
+      setErr("");
+    }
+    if (userDetails.password !== userDetails.repeatPassword) {
+      setErr("Password not matching");
+      return;
+    } else {
+      setErr("");
+    }
     try {
       let result = await instance.post("/user/addUser", userDetails);
-      navigate("login");
+      navigate("/login");
     } catch (err) {
-      setErorr("User signup failed");
+      setErr(err.response.data?.errMsg);
     }
   };
+
   return (
-    <>
-      {err && <span style={{ color: "red" }}>{err}</span>}
-      <h1>Signup</h1>
-      <table>
-        <tr>
-          <td>Username</td>
-          <td>
-            <input
-              type="text"
-              name="userName"
-              onChange={changeFunction}
-              value={userDetails.userName}
+    <MDBContainer fluid>
+      <MDBCard className="text-black m-5" style={{ borderRadius: "25px" }}>
+        <MDBCardBody>
+          {err && (
+            <div class="alert alert-danger" role="alert">
+              {err}
+            </div>
+          )}
+          <Navbar />
+          <MDBRow>
+            <SignupForm
+              changeFunction={changeFunction}
+              signupFunction={signupFunction}
             />
-          </td>
-        </tr>
-        <tr>
-          <td>Password</td>
-          <td>
-            <input
-              type="password"
-              name="password"
-              onChange={changeFunction}
-              value={userDetails.password}
-            />
-          </td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>
-            <button onClick={signupFunction}>Submit</button>
-          </td>
-        </tr>
-      </table>
-    </>
+            <MDBCol
+              md="10"
+              lg="6"
+              className="order-1 order-lg-2 d-flex align-items-center"
+            >
+              <MDBCardImage
+                src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-registration/draw1.webp"
+                fluid
+              />
+            </MDBCol>
+          </MDBRow>
+        </MDBCardBody>
+      </MDBCard>
+    </MDBContainer>
   );
 }
 
